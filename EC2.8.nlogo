@@ -24,6 +24,8 @@ globals [ ;; variabili globali
   pref                                            ;; LEI è nuova
   iter ;; conteggio iterazioni
 
+  initial-sampling;; sampling iniziale
+  dist;; distanza delle medie da mutrue in bivariate
   ;update-type ;; regola di update da usare
   ;network-type;; tipo di rete, scale-free o random
   ;var-c
@@ -63,7 +65,7 @@ to init-network
     nw:generate-random nodes edges N p
   ]
   if network-type = "scale-free" [
-    nw:generate-preferential-attachment nodes edges N 2
+    nw:generate-preferential-attachment nodes edges N 10
   ]
   ask edges[
     set tc 1
@@ -73,7 +75,18 @@ end
 to init-node ; distribuzionne credenze ai nodi
   set color green
   let murandom []
-  repeat k [set murandom (fput (random-normal mutrue vartrue) murandom)]
+  if initial-sampling = "monovariate" [
+    repeat k [set murandom (fput (random-normal mutrue vartrue) murandom)]
+  ]
+  if initial-sampling = "bivariate" [
+    let rng (random 2)
+    if rng = 0 [
+      repeat k [set murandom (fput (random-normal (mutrue + dist) vartrue) murandom)]
+    ]
+    if rng = 1 [
+      repeat k [set murandom (fput (random-normal (mutrue - dist) vartrue) murandom)]
+    ]
+  ]
   set mu0 (mean murandom)
   set var0 (standard-deviation murandom) ^ 2
   set mu mu0
@@ -185,7 +198,7 @@ to update2
     ]
 
 
-    if remainder iter 10 = 0 [       ;; iter=0 all'inizio, ad ogni GO iter=iter+1;  iter 10 =0 means se resto di iter/10 = 0 allora fai..
+    if remainder iter 1 = 0 [       ;; iter=0 all'inizio, ad ogni GO iter=iter+1;  iter 10 =0 means se resto di iter/10 = 0 allora fai..
         ask my-out-edges [
           set tc 1                   ;; ogni 10 time step mette TUTTI tc = 1
         ]
